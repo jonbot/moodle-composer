@@ -80,12 +80,10 @@ class MoodleComposer
 
         $installerdir = self::getInstallerDir($event);
 
-        if (self::isNewMoodle($event)) {
-            self::removeMoodle($event);
-            self::moveMoodle($event);
-            self::copyConfig($event);
-            $io->write("<warning>DANGER! Run 'composer update' to reinstall plugins.</warning>");
-        }
+        self::removeMoodle($event);
+        self::moveMoodle($event);
+        self::copyConfig($event);
+        $io->write("<warning>DANGER! Run 'composer update' to reinstall plugins.</warning>");
 
         if (file_exists("$installerdir/config.php")) {
             self::cleanCache($event);
