@@ -1,5 +1,5 @@
 {
-  "name": "michaelmeneses/moodle-composer",
+  "name": "jonbot/moodle-composer",
   "description": "Manage Moodle LMS and plugins using Composer at a root directory level (example ROOT/moodle).",
   "keywords": [
     "moodle",
