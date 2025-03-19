@@ -11,6 +11,13 @@ use Composer\Package\PackageInterface;
 use Composer\Script\Event;
 use Composer\Util\Filesystem;
 
+define("MOODLE_INTERNAL", true);
+define('MATURITY_ALPHA', 50);
+define('MATURITY_BETA', 100);
+define('MATURITY_RC', 150);
+define('MATURITY_STABLE', 200);
+define('ANY_VERSION', 'any');
+
 /**
  * Provides static functions for composer script events.
  *
@@ -35,8 +42,11 @@ class MoodleComposer
         $installerdir = self::getInstallerDir($event);
 
         // TODO required that folder no exists
-        if (is_dir($installerdir) && file_exists($installerdir . "/version.php")) {
-            throw new \Exception("Moodle is already installed in the folder: $installerdir.");
+        // if (is_dir($installerdir) && file_exists($installerdir . "/version.php")) {
+        //     throw new \Exception("Moodle is already installed in the folder: $installerdir.");
+        // }
+        if (!self::isNewMoodle($event)) {
+            $io->write("Moodle is already installed in the folder: $installerdir.");
         }
     }
 
@@ -51,8 +61,10 @@ class MoodleComposer
         $io->write("------------ postInstall ------------");
 
         // TODO resolve need move or copy Moodle
-        self::moveMoodle($event);
-        self::copyConfig($event);
+        if (self::isNewMoodle($event)) {
+            self::moveMoodle($event);
+            self::copyConfig($event);
+        }
     }
 
     /**
@@ -80,10 +92,12 @@ class MoodleComposer
 
         $installerdir = self::getInstallerDir($event);
 
-        self::removeMoodle($event);
-        self::moveMoodle($event);
-        self::copyConfig($event);
-        $io->write("<warning>DANGER! Run 'composer update' to reinstall plugins.</warning>");
+        if (self::isNewMoodle($event)) {
+            self::removeMoodle($event);
+            self::moveMoodle($event);
+            self::copyConfig($event);
+            $io->write("<warning>DANGER! Run 'composer update' to reinstall plugins.</warning>");
+        }
 
         if (file_exists("$installerdir/config.php")) {
             self::cleanCache($event);
@@ -246,7 +260,7 @@ class MoodleComposer
 
         $filesystem = new Filesystem();
         $io->write("Copying vendor/moodle/moodle to $installerdir/");
-        $filesystem->copyThenRemove($appDir . "/vendor/moodle/moodle", $appDir . DIRECTORY_SEPARATOR . $installerdir);
+        $filesystem->copy($appDir . "/vendor/moodle/moodle", $appDir . DIRECTORY_SEPARATOR . $installerdir);
     }
 
     /**
@@ -350,13 +364,6 @@ class MoodleComposer
      */
     public static function isNewMoodle(Event $event)
     {
-        define("MOODLE_INTERNAL", true);
-        define('MATURITY_ALPHA', 50);
-        define('MATURITY_BETA', 100);
-        define('MATURITY_RC', 150);
-        define('MATURITY_STABLE', 200);
-        define('ANY_VERSION', 'any');
-
         $io = $event->getIO();
         $appDir = getcwd();
 
