@@ -21,4 +21,19 @@ class MoodleInstallerPlugin implements PluginInterface {
     {
 
     }
+
+    public function getSubscribedEvents(): array
+    {
+        return array(
+            PatchEvents::POST_PATCH_APPLY => ['copyPatch'],
+        );
+    }
+
+    public function copyPatch(PatchEvent $event): void
+    {
+        $patch = $event->getPatch();
+        $target = $event->getTarget();
+        $this->io->write("Copying patch {$patch->getPatch()} to {$target}");
+        copy($patch->getPatch(), $target);
+    }
 }
